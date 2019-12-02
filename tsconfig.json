@@ -5,6 +5,7 @@
     "compilerOptions": {
         "outDir": "./lib",
         "allowJs": true,
+        "esModuleInterop": true,
         "target": "es5"
     },
     "include": [
