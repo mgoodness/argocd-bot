@@ -8,9 +8,9 @@ import { to } from "./to";
 const BotCommand = "argo";
 
 // supported actions, must be prefixed by BotCommand for example 'argo unlock'
-const BotActions = Object.freeze({Unlock: "unlock", Diff: "diff", Sync: "sync", Preview: "preview", Info: "info", History: "history", Rollback: "rollback", Help: "help"});
+const BotActions = Object.freeze({ Unlock: "unlock", Diff: "diff", Sync: "sync", Preview: "preview", Info: "info", History: "history", Rollback: "rollback", Help: "help" });
 // supported diff flags
-const BotDiffActions = Object.freeze({AutoSync: "--auto-sync", All: "--all", Dir: "--dir", DirShort: "-d", App: "--app", AppShort: "-a"});
+const BotDiffActions = Object.freeze({ AutoSync: "--auto-sync", All: "--all", Dir: "--dir", DirShort: "-d", App: "--app", AppShort: "-a" });
 
 // help string for actions
 const diffHelp = `
@@ -24,13 +24,15 @@ supported flags:
                                    will look in subdirectories where argo app is deployed i.e 'argo app diff -a app1' will diff against git repo where app1 manifests reside
 --all: diffs all apps on current branch against what's deployed in GKE (default behavior)`;
 
-const BotHelp = Object.freeze({Diff: diffHelp,
-                               History: "[Not yet supported] history [app name], prints deployment history of app",
-                               Info: "usage: 'info [app name]`, view info for a specific app",
-                               Preview: "[Not yet supported] deploy temporary PR",
-                               Rollback: "rollback [optional: --dry-run or -d] [app name], use 'rollback --dry-run app' or 'rollback -d app' to see latest deployment info, use 'rollback app' to rollback the latest deployment to the previous one, verify rollback using diff command",
-                               Sync: "usage: `sync [app name]`, syncs deployment in GKE cluster with manifests or helm charts using branch in current PR",
-                               Unlock: "removes lock held by current PR, allows other PR's to run bot"});
+const BotHelp = Object.freeze({
+    Diff: diffHelp,
+    History: "[Not yet supported] history [app name], prints deployment history of app",
+    Info: "usage: 'info [app name]`, view info for a specific app",
+    Preview: "[Not yet supported] deploy temporary PR",
+    Rollback: "rollback [optional: --dry-run or -d] [app name], use 'rollback --dry-run app' or 'rollback -d app' to see latest deployment info, use 'rollback app' to rollback the latest deployment to the previous one, verify rollback using diff command",
+    Sync: "usage: `sync [app name]`, syncs deployment in GKE cluster with manifests or helm charts using branch in current PR",
+    Unlock: "removes lock held by current PR, allows other PR's to run bot",
+});
 
 export class ArgoBot {
     // checks if command is valid and can be processed by ArgoBot
@@ -48,7 +50,7 @@ export class ArgoBot {
     // responde with comment on current issue in context
     // ArgoBot is triggered for PR comments, so this will create a new comment on the PR
     private static async respondWithComment(context, comment) {
-        const response = context.issue({body: comment});
+        const response = context.issue({ body: comment });
         await context.github.issues.createComment(response);
     }
 
@@ -57,7 +59,7 @@ export class ArgoBot {
     private static async setPrStatusCheck(context, stateString, descriptionString, contextString) {
         const prNumber = context.payload.issue.number;
         const branchContext = await ArgoBot.getCurrentBranchContext(context, prNumber);
-        await context.github.repos.createStatus({owner: branchContext.head.repo.owner.login, repo: branchContext.head.repo.name, sha: branchContext.head.sha, state: stateString, description: descriptionString, context: contextString});
+        await context.github.repos.createStatus({ owner: branchContext.head.repo.owner.login, repo: branchContext.head.repo.name, sha: branchContext.head.sha, state: stateString, description: descriptionString, context: contextString });
     }
 
     private static async setDiffStatusCheck(context, state) {
@@ -78,7 +80,7 @@ export class ArgoBot {
         for (const key in prs) {
             if (prs[key]["number"] === prNumber) {
                 return prs[key];
-             }
+            }
         }
         context.log.error("pr not found!");
     }
@@ -167,7 +169,7 @@ export class ArgoBot {
             } else if (arr[2] && (arr[2] === BotDiffActions.App || arr[2] === BotDiffActions.AppShort) && arr[3]) {
                 this.appContext.log("Received diff command with" + BotDiffActions.App);
                 const appDir = await this.argoAPI.fetchDirForAppWithName(arr[3]);
-                jsonResponse = {items: [{metadata: { name: arr[3]}, spec: { source: { path: appDir } } }] };
+                jsonResponse = { items: [{ metadata: { name: arr[3] }, spec: { source: { path: appDir } } }] };
                 return await this.handleDiff(jsonResponse);
             } else if (arr[2]) {
                 // if arr[2] is not empty, then it's not a valid diff arg, notify user
@@ -246,7 +248,7 @@ ${BotActions.Rollback}: ${BotHelp.Rollback}
         // this is a singleton
         const prLock = new PrLock();
         if (prLock.tryLock(prTitle, prNumber) === false) {
-            const lockMessage = prLock.getLockInfo() +  "; is holding the lock, please merge PR or comment with \`" + BotCommand + " unlock\` to release lock";
+            const lockMessage = prLock.getLockInfo() + "; is holding the lock, please merge PR or comment with \`" + BotCommand + " unlock\` to release lock";
             await ArgoBot.respondWithComment(this.appContext, lockMessage);
             return false;
         }
@@ -266,7 +268,7 @@ ${BotActions.Rollback}: ${BotHelp.Rollback}
         } else {
             // notify user to unlock from the PR that owns the lock
             this.appContext.log("received unlock request from the wrong PR");
-            const lockMessage = prLock.getLockInfo() +  "; is holding the lock, please comment on that PR to unlock";
+            const lockMessage = prLock.getLockInfo() + "; is holding the lock, please comment on that PR to unlock";
             return await ArgoBot.respondWithComment(this.appContext, lockMessage);
         }
     }
@@ -316,7 +318,7 @@ ${syncRes.stdout}
 \`\`\`
 `;
         await ArgoBot.respondWithComment(this.appContext, res);
-     }
+    }
 
     private async handleInfo(appName) {
         const command = "./src/sh/view_app_info.sh " + appName;
@@ -362,7 +364,7 @@ ${syncRes.stdout}
     }
 
     private async handleDiff(jsonArgoCDApps) {
-        const cloneUrl = "https://" + this.argoConfig.getGithubToken() + ":x-oauth-basic@" + this.argoConfig.getGithubRepo();
+        const cloneUrl = "https://" + this.argoConfig.getGithubToken() + ":x-oauth-basic@" + this.appContext.payload.repository.url;
         const prNumber = this.appContext.payload.issue.number;
         const curBranch = await ArgoBot.getCurrentBranch(this.appContext, prNumber);
         const repoDir = "cloned_repos/pr_" + prNumber;

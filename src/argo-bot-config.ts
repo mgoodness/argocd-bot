@@ -18,8 +18,4 @@ export class ArgoBotConfig {
     public getGithubToken() {
         return this.config.GITHUB_TOKEN;
     }
-
-    public getGithubRepo() {
-        return this.config.GITHUB_REPO;
-    }
 }
